@@ -40,11 +40,12 @@ describe("VotingEngine System", function () {
     });
 
 
+
     describe("GovernanceToken", function () {
-        it("Should allow buying tokens with ETH", async function () {
-            // addr1 sends 1 ETH
-            await token.connect(addr1).buyTokens({ value: parseEther("1") });
-            // Expect 1000 Tokens
+        it("Should allow owner to transfer tokens", async function () {
+            // Owner transfers 1000 tokens to addr1
+            await token.transfer(addr1.address, parseEther("1000"));
+            // Expect addr1 to have 1000 Tokens
             expect(await token.balanceOf(addr1.address)).to.equal(parseEther("1000"));
         });
     });

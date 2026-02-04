@@ -5,10 +5,16 @@ const EventLogger = ({ contract }) => {
     const [events, setEvents] = useState([]);
 
     useEffect(() => {
-        if (!contract) return;
+        if (!contract) {
+            console.log('❌ EventLogger: No contract provided');
+            return;
+        }
+
+        console.log('✅ EventLogger: Contract connected, attaching listeners...');
 
         // Listeners (Observer Pattern)
         const onProposalCreated = (id, proposer, desc, deadline, event) => {
+            console.log('🎉 ProposalCreated event received!', id.toString());
             addEvent('ProposalCreated', {
                 ID: id.toString(),
                 Desc: desc,
@@ -17,6 +23,7 @@ const EventLogger = ({ contract }) => {
         };
 
         const onVoted = (id, voter, support, weight, event) => {
+            console.log('🗳️ Voted event received!', id.toString());
             addEvent('Voted', {
                 ID: id.toString(),
                 Vote: support ? 'YES' : 'NO',
@@ -25,6 +32,7 @@ const EventLogger = ({ contract }) => {
         };
 
         const onExecuted = (id, event) => {
+            console.log('✅ ProposalExecuted event received!', id.toString());
             addEvent('ProposalExecuted', { ID: id.toString() });
         };
 
@@ -33,14 +41,18 @@ const EventLogger = ({ contract }) => {
         contract.on('Voted', onVoted);
         contract.on('ProposalExecuted', onExecuted);
 
+        console.log('✅ EventLogger: Listeners attached successfully');
+
         // Cleanup
         return () => {
+            console.log('🧹 EventLogger: Cleaning up listeners');
             contract.removeAllListeners();
         };
 
     }, [contract]);
 
     const addEvent = (type, data) => {
+        console.log('📝 Adding event to UI:', type, data);
         setEvents(prev => [{
             id: Date.now(),
             type,
@@ -50,27 +62,28 @@ const EventLogger = ({ contract }) => {
     };
 
     return (
-        <div className="card">
-            <h2>📡 Event Observer Log</h2>
-            <div className="event-log-container">
-                {events.length === 0 && <p className="text-gray-500 text-center italic">Waiting for events...</p>}
-                {events.map(ev => (
-                    <div key={ev.id} className="event-item animate-fade-in">
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="event-type">{ev.type}</span>
-                            <span className="text-xs text-gray-500">{ev.time}</span>
+        events.length === 0 ? null : (
+            <div className="card">
+                <h2>📡 Event Observer Log</h2>
+                <div className="event-log-container">
+                    {events.map(ev => (
+                        <div key={ev.id} className="event-item animate-fade-in">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="event-type">{ev.type}</span>
+                                <span className="text-xs text-gray-500">{ev.time}</span>
+                            </div>
+                            <div className="text-sm">
+                                {Object.entries(ev.data).map(([k, v]) => (
+                                    <span key={k} className="mr-3">
+                                        <span className="font-semibold text-gray-400">{k}:</span> {v}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
-                        <div className="text-sm">
-                            {Object.entries(ev.data).map(([k, v]) => (
-                                <span key={k} className="mr-3">
-                                    <span className="font-semibold text-gray-400">{k}:</span> {v}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
-        </div>
+        )
     );
 };
 
