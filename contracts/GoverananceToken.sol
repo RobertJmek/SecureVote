@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract GovernanceToken is ERC20 {
-    uint256 public constant TOKENS_PER_ETH = 1000;
+    uint256 public constant TOKENS_PER_ETH = 100;
 
     constructor(uint256 initialSupply) ERC20("GovernanceToken", "GT") {
         _mint(msg.sender, initialSupply);

@@ -1,0 +1,77 @@
+import React, { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
+
+const EventLogger = ({ contract }) => {
+    const [events, setEvents] = useState([]);
+
+    useEffect(() => {
+        if (!contract) return;
+
+        // Listeners (Observer Pattern)
+        const onProposalCreated = (id, proposer, desc, deadline, event) => {
+            addEvent('ProposalCreated', {
+                ID: id.toString(),
+                Desc: desc,
+                Proposer: `${proposer.slice(0, 6)}...`
+            });
+        };
+
+        const onVoted = (id, voter, support, weight, event) => {
+            addEvent('Voted', {
+                ID: id.toString(),
+                Vote: support ? 'YES' : 'NO',
+                Voter: `${voter.slice(0, 6)}...`
+            });
+        };
+
+        const onExecuted = (id, event) => {
+            addEvent('ProposalExecuted', { ID: id.toString() });
+        };
+
+        // Attach
+        contract.on('ProposalCreated', onProposalCreated);
+        contract.on('Voted', onVoted);
+        contract.on('ProposalExecuted', onExecuted);
+
+        // Cleanup
+        return () => {
+            contract.removeAllListeners();
+        };
+
+    }, [contract]);
+
+    const addEvent = (type, data) => {
+        setEvents(prev => [{
+            id: Date.now(),
+            type,
+            time: new Date().toLocaleTimeString(),
+            data
+        }, ...prev].slice(0, 20)); // Keep last 20
+    };
+
+    return (
+        <div className="card">
+            <h2>📡 Event Observer Log</h2>
+            <div className="event-log-container">
+                {events.length === 0 && <p className="text-gray-500 text-center italic">Waiting for events...</p>}
+                {events.map(ev => (
+                    <div key={ev.id} className="event-item animate-fade-in">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="event-type">{ev.type}</span>
+                            <span className="text-xs text-gray-500">{ev.time}</span>
+                        </div>
+                        <div className="text-sm">
+                            {Object.entries(ev.data).map(([k, v]) => (
+                                <span key={k} className="mr-3">
+                                    <span className="font-semibold text-gray-400">{k}:</span> {v}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default EventLogger;

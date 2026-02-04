@@ -39,6 +39,23 @@ async function main() {
     await engine.setTreasury(treasuryAddr);
     console.log("✅ Treasury linked!");
 
+    // 5. Deploy TokenFaucet
+    console.log("\n📜 Deploying TokenFaucet...");
+    const TokenFaucet = await hre.ethers.getContractFactory("TokenFaucet");
+    const faucet = await TokenFaucet.deploy(
+        tokenAddr,
+        hre.ethers.parseEther("1000") // 1000 GT per claim
+    );
+    await faucet.waitForDeployment();
+    const faucetAddr = await faucet.getAddress();
+    console.log("✅ TokenFaucet:", faucetAddr);
+
+    // 6. Fund Faucet with 100,000 GT
+    console.log("\n💰 Funding Faucet with 100,000 GT...");
+    const fundAmount = hre.ethers.parseEther("100000");
+    await token.transfer(faucetAddr, fundAmount);
+    console.log("✅ Faucet funded! Balance:", hre.ethers.formatEther(await token.balanceOf(faucetAddr)), "GT");
+
     // Summary
     console.log("\n--------------------------------------------------");
     console.log("🎉 Deployment Complete!");
@@ -46,6 +63,7 @@ async function main() {
     console.log("GovernanceToken:", tokenAddr);
     console.log("VotingEngine:   ", engineAddr);
     console.log("Treasury:       ", treasuryAddr);
+    console.log("TokenFaucet:    ", faucetAddr);
     console.log("--------------------------------------------------");
     console.log(`Network: ${hre.network.name} (Chain ID: ${hre.network.config.chainId || 'local'})`);
 }
